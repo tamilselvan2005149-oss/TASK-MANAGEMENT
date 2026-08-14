@@ -598,7 +598,7 @@ PAGES = [
 ]
 page = st.sidebar.radio("Navigate", PAGES)
 
-# --- Auto-refresh control: Off, 10s, 30s, 60s, 5 minutes -----------------
+# --- Auto-refresh control: OFF by default. User must explicitly turn it on. ---
 REFRESH_OPTIONS = {
     "Off": None,
     "10 seconds": 10,
@@ -609,7 +609,7 @@ REFRESH_OPTIONS = {
 refresh_choice = st.sidebar.selectbox(
     "Auto-refresh interval (Live pages)",
     list(REFRESH_OPTIONS.keys()),
-    index=2  # defaults to "30 seconds"
+    index=0  # "Off" by default — no auto-refresh unless the user picks an interval
 )
 refresh_interval = REFRESH_OPTIONS[refresh_choice]
 
@@ -620,7 +620,7 @@ st.sidebar.markdown("---")
 st.sidebar.caption("SQLite DB: company_tasks.db")
 
 # Auto-refresh mechanism (works without extra packages)
-# Only injects the meta-refresh tag when auto-refresh is not Off.
+# Only injects the meta-refresh tag when the user has explicitly chosen an interval.
 if page in ("Executive Dashboard", "Live Task Monitor") and refresh_interval is not None:
     st.markdown(
         f"<meta http-equiv='refresh' content='{refresh_interval}'>",
@@ -628,7 +628,7 @@ if page in ("Executive Dashboard", "Live Task Monitor") and refresh_interval is 
     )
     st.sidebar.caption(f"⏱️ Auto-refresh: every {refresh_choice}")
 else:
-    st.sidebar.caption("⏱️ Auto-refresh: Off")
+    st.sidebar.caption("⏱️ Auto-refresh: Off (use 'Refresh Now' or enable above)")
 
 # Load & compute
 raw_tasks = load_tasks()
@@ -842,7 +842,7 @@ elif page == "Live Task Monitor":
     if refresh_interval is not None:
         st.caption(f"Auto-refreshing every {refresh_choice}")
     else:
-        st.caption("Auto-refresh is Off")
+        st.caption("Auto-refresh is Off — use the sidebar to enable it, or click 'Refresh Now'")
 
     filtered_live = filter_panel(live_tasks, "live")
 
