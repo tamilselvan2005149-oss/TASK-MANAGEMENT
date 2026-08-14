@@ -598,7 +598,21 @@ PAGES = [
 ]
 page = st.sidebar.radio("Navigate", PAGES)
 
-refresh_interval = st.sidebar.selectbox("Auto-refresh interval (Live pages)", [10, 30, 60], index=1)
+# --- Auto-refresh control: Off, 10s, 30s, 60s, 5 minutes -----------------
+REFRESH_OPTIONS = {
+    "Off": None,
+    "10 seconds": 10,
+    "30 seconds": 30,
+    "60 seconds": 60,
+    "5 minutes": 300,
+}
+refresh_choice = st.sidebar.selectbox(
+    "Auto-refresh interval (Live pages)",
+    list(REFRESH_OPTIONS.keys()),
+    index=2  # defaults to "30 seconds"
+)
+refresh_interval = REFRESH_OPTIONS[refresh_choice]
+
 if st.sidebar.button("🔄 Refresh Now"):
     st.rerun()
 
@@ -606,11 +620,15 @@ st.sidebar.markdown("---")
 st.sidebar.caption("SQLite DB: company_tasks.db")
 
 # Auto-refresh mechanism (works without extra packages)
-if page in ("Executive Dashboard", "Live Task Monitor"):
+# Only injects the meta-refresh tag when auto-refresh is not Off.
+if page in ("Executive Dashboard", "Live Task Monitor") and refresh_interval is not None:
     st.markdown(
         f"<meta http-equiv='refresh' content='{refresh_interval}'>",
         unsafe_allow_html=True
     )
+    st.sidebar.caption(f"⏱️ Auto-refresh: every {refresh_choice}")
+else:
+    st.sidebar.caption("⏱️ Auto-refresh: Off")
 
 # Load & compute
 raw_tasks = load_tasks()
@@ -821,7 +839,10 @@ elif page == "Live Task Monitor":
     kpi_card(c4, "Overdue", len(live_tasks[live_tasks["Alert_Level"] == "Overdue"]))
 
     st.markdown("---")
-    st.caption(f"Auto-refreshing every {refresh_interval}s")
+    if refresh_interval is not None:
+        st.caption(f"Auto-refreshing every {refresh_choice}")
+    else:
+        st.caption("Auto-refresh is Off")
 
     filtered_live = filter_panel(live_tasks, "live")
 
